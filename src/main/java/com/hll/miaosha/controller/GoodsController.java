@@ -1,12 +1,12 @@
 package com.hll.miaosha.controller;
 
-import com.hll.miaosha.redis.GoodsKey;
-import com.hll.miaosha.vo.GoodsDetailVo;
 import com.hll.miaosha.domain.MiaoshaUser;
+import com.hll.miaosha.redis.GoodsKey;
 import com.hll.miaosha.redis.RedisService;
 import com.hll.miaosha.result.Result;
 import com.hll.miaosha.service.GoodsService;
 import com.hll.miaosha.service.MiaoshaUserService;
+import com.hll.miaosha.vo.GoodsDetailVo;
 import com.hll.miaosha.vo.GoodsVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +43,7 @@ public class GoodsController {
     ApplicationContext applicationContext;
 
     /**
+     * goods_list 秒杀商品列表
      * QPS:1267 load:15 mysql
      * 5000 * 10
      * QPS:2884, load:5
@@ -68,6 +69,15 @@ public class GoodsController {
         return html;
     }
 
+    /**
+     * goods_detail 秒杀商品详情
+     *
+     * @param request  request
+     * @param response response
+     * @param model    model
+     * @param user     user
+     * @param goodsId  商品id
+     */
     @RequestMapping(value = "/to_detail2/{goodsId}", produces = "text/html")
     @ResponseBody
     public String detail2(HttpServletRequest request, HttpServletResponse response, Model model, MiaoshaUser user,
@@ -87,6 +97,7 @@ public class GoodsController {
         long endAt = goods.getEndDate().getTime();
         long now = System.currentTimeMillis();
 
+        // miaoshaStatus 0:未开始 1：进行中 2：结束
         int miaoshaStatus = 0;
         int remainSeconds = 0;
         if (now < startAt) {//秒杀还没开始，倒计时
@@ -101,8 +112,6 @@ public class GoodsController {
         }
         model.addAttribute("miaoshaStatus", miaoshaStatus);
         model.addAttribute("remainSeconds", remainSeconds);
-//        return "goods_detail";
-
         SpringWebContext ctx = new SpringWebContext(request, response,
                 request.getServletContext(), request.getLocale(), model.asMap(), applicationContext);
         html = thymeleafViewResolver.getTemplateEngine().process("goods_detail", ctx);
